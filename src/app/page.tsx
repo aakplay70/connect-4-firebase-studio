@@ -171,7 +171,7 @@ export default function ConnectFour() {
         <div className="grid bg-blue-500 rounded-md shadow-lg">
          <div className="grid grid-cols-7">
             {Array.from({ length: COLS }, (_, i) => (
-              <div key={i} className="w-14">
+              <div key={i} className="w-full">
                 <Button
                   onClick={() => handleMove(i)}
                   className="w-full bg-rose-100 text-blue-700 hover:bg-accent"
@@ -182,11 +182,11 @@ export default function ConnectFour() {
             ))}
           </div>
           {board.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex">
+            <div key={rowIndex} className="flex" style={{ height: '70px' }}>
               {row.map((cell, colIndex) => (
                 <div
                   key={colIndex}
-                  className="w-14 h-14 flex items-center justify-center"
+                  className="w-full h-full flex items-center justify-center"
                 >
                   <div className="w-full h-full flex items-center justify-center">
                     <div
