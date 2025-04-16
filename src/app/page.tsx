@@ -197,10 +197,10 @@ export default function ConnectFour() {
                       }`}
                     >
                       {cell === "X" && (
-                        <div className="w-10 h-10 rounded-full bg-red-500" />
+                        <div className="w-12 h-12 rounded-full bg-red-500" />
                       )}
                       {cell === "O" && (
-                        <div className="w-10 h-10 rounded-full bg-green-500" />
+                        <div className="w-12 h-12 rounded-full bg-green-500" />
                       )}
                     </div>
                   </div>
