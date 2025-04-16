@@ -183,20 +183,22 @@ export default function ConnectFour() {
             ))}
           </div>
         ))}
+        <div className="flex justify-center">
+          {Array.from({ length: COLS }, (_, i) => (
+            <Button
+              key={i}
+              onClick={() => handleMove(i)}
+              className="mx-2 bg-yellow-400 text-blue-700 hover:bg-yellow-500"
+            >
+              Move {i + 1}
+            </Button>
+          ))}
+        </div>
       </div>
       <div className="mt-4">
         {!winner && !gameOver ? (
-          <div className="flex justify-center">
-            {Array.from({ length: COLS }, (_, i) => (
-              <Button
-                key={i}
-                onClick={() => handleMove(i)}
-                className="mx-2 bg-yellow-400 text-blue-700 hover:bg-yellow-500"
-              >
-                Move {i + 1}
-              </Button>
-            ))}
-          </div>
+          
+           null
         ) : (
           <Button onClick={resetGame} className="bg-blue-500 hover:bg-blue-700 text-white">
             Reset Game
