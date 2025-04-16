@@ -7,12 +7,12 @@ import { useToast } from "@/hooks/use-toast";
 const ROWS = 6;
 const COLS = 7;
 
-type Player = "X" | "O" | null;
+type Player = "Red" | "Yellow" | null;
 type Board = Player[][];
 
 export default function ConnectFour() {
   const [board, setBoard] = useState<Board>(createBoard());
-  const [currentPlayer, setCurrentPlayer] = useState<Player>("X");
+  const [currentPlayer, setCurrentPlayer] = useState<Player>("Red");
   const [winner, setWinner] = useState<Player>(null);
   const [gameOver, setGameOver] = useState(false);
   const { toast } = useToast();
@@ -60,7 +60,7 @@ export default function ConnectFour() {
         );
 
         setBoard(newBoard);
-        setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
+        setCurrentPlayer(currentPlayer === "Red" ? "Yellow" : "Red");
           return;
         }
 
@@ -173,7 +173,7 @@ export default function ConnectFour() {
 
   const resetGame = () => {
     setBoard(createBoard());
-    setCurrentPlayer("X");
+    setCurrentPlayer("Red");
     setWinner(null);
     setGameOver(false);
   };
@@ -218,10 +218,10 @@ export default function ConnectFour() {
                           : "bg-blue-300"
                       }`}
                     >
-                      {cell === "X" && (
+                      {cell === "Red" && (
                         <div className="w-10 h-10 rounded-full bg-red-500" />
                       )}
-                      {cell === "O" && (
+                      {cell === "Yellow" && (
                         <div className="w-10 h-10 rounded-full bg-yellow-500" />
                       )}
                     </div>
