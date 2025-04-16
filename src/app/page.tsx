@@ -158,7 +158,7 @@ export default function ConnectFour() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-4">
-      <h1 className="text-4xl font-bold mb-4 text-blue-600">Connect Four</h1>
+      <h1 className="text-4xl font-bold mb-4 text-blue-600">Connect Four Fun</h1>
       <div className="mb-4">
         {!winner && !gameOver ? (
           <p className="text-lg">
