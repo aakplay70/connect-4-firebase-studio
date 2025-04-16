@@ -172,14 +172,24 @@ export default function ConnectFour() {
               {row.map((cell, colIndex) => (
                 <div
                   key={colIndex}
-                  className="w-14 h-14 border border-blue-300 flex items-center justify-center"
+                  className="w-14 h-14 flex items-center justify-center"
                 >
-                  {cell === "X" && (
-                    <div className="w-10 h-10 rounded-full bg-red-500" />
-                  )}
-                  {cell === "O" && (
-                    <div className="w-10 h-10 rounded-full bg-green-500" />
-                  )}
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div
+                      className={`w-12 h-12 flex items-center justify-center rounded-full ${
+                        (rowIndex + colIndex) % 2 === 0
+                          ? "bg-blue-200"
+                          : "bg-blue-300"
+                      }`}
+                    >
+                      {cell === "X" && (
+                        <div className="w-8 h-8 rounded-full bg-red-500" />
+                      )}
+                      {cell === "O" && (
+                        <div className="w-8 h-8 rounded-full bg-green-500" />
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
