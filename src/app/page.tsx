@@ -38,8 +38,8 @@ export default function ConnectFour() {
           i === row ? r.map((c, j) => (j === col ? currentPlayer : c)) : r
         );
 
-        // Animate the piece drop
-        animateDrop(row, col, currentPlayer, newBoard);
+        setBoard(newBoard);
+        setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
         return;
       }
     }
@@ -48,41 +48,6 @@ export default function ConnectFour() {
       title: "Invalid Move",
       description: "Column is full!",
     });
-  };
-
-  const animateDrop = (row: number, col: number, player: Player, newBoard: Board) => {
-    // Set a temporary state for animation
-    const animationSteps = 10; // Number of animation frames
-    let currentStep = 0;
-
-    const animate = () => {
-      currentStep++;
-
-      // Calculate the animated board for this step
-      const animatedBoard = board.map((r, i) =>
-        r.map((c, j) => {
-          if (i === row && j === col && currentStep <= animationSteps) {
-            const dropHeight = (row + 1) * (currentStep / animationSteps);
-            return {
-              player: player,
-              dropHeight: dropHeight
-            };
-          }
-          return c;
-        })
-      );
-       setBoard(animatedBoard as Board);
-
-      if (currentStep < animationSteps) {
-        requestAnimationFrame(animate);
-      } else {
-        // Finalize the board state after animation
-        setBoard(newBoard);
-        setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
-      }
-    };
-
-    requestAnimationFrame(animate);
   };
 
   const checkWinner = () => {
@@ -204,6 +169,18 @@ export default function ConnectFour() {
       </div>
       <div className="max-w-md w-full">
         <div className="grid bg-blue-500 rounded-md shadow-lg">
+         <div className="flex">
+            {Array.from({ length: COLS }, (_, i) => (
+              <div key={i} className="w-14">
+                <Button
+                  onClick={() => handleMove(i)}
+                  className="w-full bg-yellow-400 text-blue-700 hover:bg-yellow-500"
+                >
+                  Move {i + 1}
+                </Button>
+              </div>
+            ))}
+          </div>
           {board.map((row, rowIndex) => (
             <div key={rowIndex} className="flex">
               {row.map((cell, colIndex) => (
@@ -219,26 +196,10 @@ export default function ConnectFour() {
                           : "bg-blue-300"
                       }`}
                     >
-                      {cell && typeof cell === 'object' && cell.player === "X" && (
-                        <div className="w-8 h-8 rounded-full bg-red-500" 
-                          style={{
-                            transform: `translateY(${cell.dropHeight ? cell.dropHeight * -100 : 0}%)`,
-                            transition: 'transform 0.1s ease-in-out'
-                          }}
-                        />
-                      )}
-                      {cell && typeof cell === 'object' && cell.player === "O" && (
-                        <div className="w-8 h-8 rounded-full bg-green-500"
-                           style={{
-                            transform: `translateY(${cell.dropHeight ? cell.dropHeight * -100 : 0}%)`,
-                            transition: 'transform 0.1s ease-in-out'
-                          }}
-                        />
-                      )}
-                      {cell === "X" && typeof cell !== 'object' &&(
+                      {cell === "X" && (
                         <div className="w-8 h-8 rounded-full bg-red-500" />
                       )}
-                      {cell === "O" && typeof cell !== 'object' && (
+                      {cell === "O" && (
                         <div className="w-8 h-8 rounded-full bg-green-500" />
                       )}
                     </div>
@@ -247,18 +208,6 @@ export default function ConnectFour() {
               ))}
             </div>
           ))}
-          <div className="flex">
-            {Array.from({ length: COLS }, (_, i) => (
-              <div key={i} className="w-14">
-                <Button
-                  onClick={() => handleMove(i)}
-                  className="w-full bg-yellow-400 text-blue-700 hover:bg-yellow-500"
-                >
-                  Move {i + 1}
-                </Button>
-              </div>
-            ))}
-          </div>
         </div>
         <div className="mt-4">
           {!winner && !gameOver ? null : (
@@ -274,4 +223,3 @@ export default function ConnectFour() {
     </div>
   );
 }
-
