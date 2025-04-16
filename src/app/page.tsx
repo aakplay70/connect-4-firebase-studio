@@ -155,7 +155,7 @@ export default function ConnectFour() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2">
+    <div className="flex flex-col items-center justify-center min-h-screen py-4">
       <h1 className="text-4xl font-bold mb-4 text-blue-600">Connect Four</h1>
       <div className="mb-4">
         {!winner && !gameOver ? (
@@ -165,46 +165,48 @@ export default function ConnectFour() {
           </p>
         ) : null}
       </div>
-      <div className="grid bg-blue-500 rounded-md shadow-lg">
-        {board.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex">
-            {row.map((cell, colIndex) => (
-              <div
-                key={colIndex}
-                className="w-14 h-14 border border-blue-300 flex items-center justify-center"
-              >
-                {cell === "X" && (
-                  <div className="w-10 h-10 rounded-full bg-red-500" />
-                )}
-                {cell === "O" && (
-                  <div className="w-10 h-10 rounded-full bg-green-500" />
-                )}
+      <div className="max-w-md w-full">
+        <div className="grid bg-blue-500 rounded-md shadow-lg">
+          {board.map((row, rowIndex) => (
+            <div key={rowIndex} className="flex">
+              {row.map((cell, colIndex) => (
+                <div
+                  key={colIndex}
+                  className="w-14 h-14 border border-blue-300 flex items-center justify-center"
+                >
+                  {cell === "X" && (
+                    <div className="w-10 h-10 rounded-full bg-red-500" />
+                  )}
+                  {cell === "O" && (
+                    <div className="w-10 h-10 rounded-full bg-green-500" />
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+          <div className="flex">
+            {Array.from({ length: COLS }, (_, i) => (
+              <div key={i} className="w-14">
+                <Button
+                  onClick={() => handleMove(i)}
+                  className="w-full bg-yellow-400 text-blue-700 hover:bg-yellow-500"
+                >
+                  Move {i + 1}
+                </Button>
               </div>
             ))}
           </div>
-        ))}
-        <div className="flex">
-          {Array.from({ length: COLS }, (_, i) => (
-            <div key={i} className="w-14">
-              <Button
-                onClick={() => handleMove(i)}
-                className="w-full bg-yellow-400 text-blue-700 hover:bg-yellow-500"
-              >
-                Move {i + 1}
-              </Button>
-            </div>
-          ))}
         </div>
-      </div>
-      <div className="mt-4">
-        {!winner && !gameOver ? (
-          
-           null
-        ) : (
-          <Button onClick={resetGame} className="bg-blue-500 hover:bg-blue-700 text-white">
-            Reset Game
-          </Button>
-        )}
+        <div className="mt-4">
+          {!winner && !gameOver ? null : (
+            <Button
+              onClick={resetGame}
+              className="bg-blue-500 hover:bg-blue-700 text-white"
+            >
+              Reset Game
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
