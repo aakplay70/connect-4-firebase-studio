@@ -176,7 +176,7 @@ export default function ConnectFour() {
                   onClick={() => handleMove(i)}
                   className="w-full bg-rose-100 text-blue-700 hover:bg-accent"
                 >
-                  Move {i + 1}
+                  Here
                 </Button>
               </div>
             ))}
