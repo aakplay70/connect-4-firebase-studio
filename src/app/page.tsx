@@ -174,7 +174,7 @@ export default function ConnectFour() {
               <div key={i} className="w-14">
                 <Button
                   onClick={() => handleMove(i)}
-                  className="w-full bg-yellow-400 text-blue-700 hover:bg-yellow-500"
+                  className="w-full bg-pink-400 text-blue-700 hover:bg-pink-500"
                 >
                   Move {i + 1}
                 </Button>
