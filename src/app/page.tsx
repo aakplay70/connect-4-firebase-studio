@@ -182,7 +182,7 @@ export default function ConnectFour() {
             ))}
           </div>
           {board.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex" style={{ height: "70px" }}>
+            <div key={rowIndex} className="flex" style={{ height: "85px" }}>
               {row.map((cell, colIndex) => (
                 <div
                   key={colIndex}
@@ -190,17 +190,17 @@ export default function ConnectFour() {
                 >
                   <div className="w-full h-full flex items-center justify-center">
                     <div
-                      className={`w-14 h-14 flex items-center justify-center rounded-full ${
+                      className={`w-16 h-16 flex items-center justify-center rounded-full ${
                         (rowIndex + colIndex) % 2 === 0
                           ? "bg-blue-200"
                           : "bg-blue-300"
                       }`}
                     >
                       {cell === "X" && (
-                        <div className="w-12 h-12 rounded-full bg-red-500" />
+                        <div className="w-14 h-14 rounded-full bg-red-500" />
                       )}
                       {cell === "O" && (
-                        <div className="w-12 h-12 rounded-full bg-green-500" />
+                        <div className="w-14 h-14 rounded-full bg-yellow-500" />
                       )}
                     </div>
                   </div>
