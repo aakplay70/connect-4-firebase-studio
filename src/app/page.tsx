@@ -183,15 +183,16 @@ export default function ConnectFour() {
             ))}
           </div>
         ))}
-        <div className="flex justify-center">
+        <div className="flex">
           {Array.from({ length: COLS }, (_, i) => (
-            <Button
-              key={i}
-              onClick={() => handleMove(i)}
-              className="mx-2 bg-yellow-400 text-blue-700 hover:bg-yellow-500"
-            >
-              Move {i + 1}
-            </Button>
+            <div key={i} className="w-14">
+              <Button
+                onClick={() => handleMove(i)}
+                className="w-full bg-yellow-400 text-blue-700 hover:bg-yellow-500"
+              >
+                Move {i + 1}
+              </Button>
+            </div>
           ))}
         </div>
       </div>
