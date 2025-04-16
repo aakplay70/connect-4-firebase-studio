@@ -33,11 +33,13 @@ export default function ConnectFour() {
 
     for (let row = ROWS - 1; row >= 0; row--) {
       if (!board[row][col]) {
+        // Create a new board with the move
         const newBoard = board.map((r, i) =>
           i === row ? r.map((c, j) => (j === col ? currentPlayer : c)) : r
         );
-        setBoard(newBoard);
-        setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
+
+        // Animate the piece drop
+        animateDrop(row, col, currentPlayer, newBoard);
         return;
       }
     }
@@ -46,6 +48,41 @@ export default function ConnectFour() {
       title: "Invalid Move",
       description: "Column is full!",
     });
+  };
+
+  const animateDrop = (row: number, col: number, player: Player, newBoard: Board) => {
+    // Set a temporary state for animation
+    const animationSteps = 10; // Number of animation frames
+    let currentStep = 0;
+
+    const animate = () => {
+      currentStep++;
+
+      // Calculate the animated board for this step
+      const animatedBoard = board.map((r, i) =>
+        r.map((c, j) => {
+          if (i === row && j === col && currentStep <= animationSteps) {
+            const dropHeight = (row + 1) * (currentStep / animationSteps);
+            return {
+              player: player,
+              dropHeight: dropHeight
+            };
+          }
+          return c;
+        })
+      );
+       setBoard(animatedBoard as Board);
+
+      if (currentStep < animationSteps) {
+        requestAnimationFrame(animate);
+      } else {
+        // Finalize the board state after animation
+        setBoard(newBoard);
+        setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
+      }
+    };
+
+    requestAnimationFrame(animate);
   };
 
   const checkWinner = () => {
@@ -182,10 +219,26 @@ export default function ConnectFour() {
                           : "bg-blue-300"
                       }`}
                     >
-                      {cell === "X" && (
+                      {cell && typeof cell === 'object' && cell.player === "X" && (
+                        <div className="w-8 h-8 rounded-full bg-red-500" 
+                          style={{
+                            transform: `translateY(${cell.dropHeight ? cell.dropHeight * -100 : 0}%)`,
+                            transition: 'transform 0.1s ease-in-out'
+                          }}
+                        />
+                      )}
+                      {cell && typeof cell === 'object' && cell.player === "O" && (
+                        <div className="w-8 h-8 rounded-full bg-green-500"
+                           style={{
+                            transform: `translateY(${cell.dropHeight ? cell.dropHeight * -100 : 0}%)`,
+                            transition: 'transform 0.1s ease-in-out'
+                          }}
+                        />
+                      )}
+                      {cell === "X" && typeof cell !== 'object' &&(
                         <div className="w-8 h-8 rounded-full bg-red-500" />
                       )}
-                      {cell === "O" && (
+                      {cell === "O" && typeof cell !== 'object' && (
                         <div className="w-8 h-8 rounded-full bg-green-500" />
                       )}
                     </div>
