@@ -167,7 +167,7 @@ export default function ConnectFour() {
           </p>
         ) : null}
       </div>
-      <div className="max-w-md w-full">
+      <div className="max-w-lg w-full">
         <div className="grid bg-blue-500 rounded-md shadow-lg">
          <div className="grid grid-cols-7">
             {Array.from({ length: COLS }, (_, i) => (
