@@ -169,12 +169,12 @@ export default function ConnectFour() {
       </div>
       <div className="max-w-md w-full">
         <div className="grid bg-blue-500 rounded-md shadow-lg">
-         <div className="flex">
+         <div className="grid grid-cols-7">
             {Array.from({ length: COLS }, (_, i) => (
               <div key={i} className="w-14">
                 <Button
                   onClick={() => handleMove(i)}
-                  className="w-full bg-accent text-blue-700 hover:bg-accent"
+                  className="w-full bg-rose-100 text-blue-700 hover:bg-accent"
                 >
                   Move {i + 1}
                 </Button>
