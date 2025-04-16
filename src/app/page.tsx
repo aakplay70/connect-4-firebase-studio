@@ -31,24 +31,46 @@ export default function ConnectFour() {
   const handleMove = (col: number) => {
     if (gameOver || winner) return;
 
+    // Find the next available row in the selected column
+    let rowToDrop = -1;
     for (let row = ROWS - 1; row >= 0; row--) {
       if (!board[row][col]) {
-        // Create a new board with the move
+        rowToDrop = row;
+        break;
+      }
+    }
+
+    if (rowToDrop === -1) {
+      toast({
+        title: "Invalid Move",
+        description: "Column is full!",
+      });
+      return;
+    }
+
+    // Animation using CSS classes
+    const animatePiece = (startRow: number, endRow: number, column: number) => {
+      let currentRow = startRow;
+      const animationInterval = setInterval(() => {
+        if (currentRow > endRow) {
+          clearInterval(animationInterval);
+           // Create a new board with the move
         const newBoard = board.map((r, i) =>
-          i === row ? r.map((c, j) => (j === col ? currentPlayer : c)) : r
+          i === endRow ? r.map((c, j) => (j === col ? currentPlayer : c)) : r
         );
 
         setBoard(newBoard);
         setCurrentPlayer(currentPlayer === "X" ? "O" : "X");
-        return;
-      }
-    }
+          return;
+        }
 
-    toast({
-      title: "Invalid Move",
-      description: "Column is full!",
-    });
+        currentRow++;
+      }, 100); // Adjust timing as needed
+    };
+
+    animatePiece(-1, rowToDrop, col);
   };
+
 
   const checkWinner = () => {
     // Horizontal
@@ -167,7 +189,7 @@ export default function ConnectFour() {
           </p>
         ) : null}
       </div>
-      <div className="max-w-lg w-full">
+      <div className="max-w-md w-full">
         <div className="grid bg-blue-500 rounded-md shadow-lg">
           <div className="grid grid-cols-7">
             {Array.from({ length: COLS }, (_, i) => (
@@ -182,7 +204,7 @@ export default function ConnectFour() {
             ))}
           </div>
           {board.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex" style={{ height: "85px" }}>
+            <div key={rowIndex} className="flex" style={{ height: "65px" }}>
               {row.map((cell, colIndex) => (
                 <div
                   key={colIndex}
@@ -190,17 +212,17 @@ export default function ConnectFour() {
                 >
                   <div className="w-full h-full flex items-center justify-center">
                     <div
-                      className={`w-16 h-16 flex items-center justify-center rounded-full ${
+                      className={`w-12 h-12 flex items-center justify-center rounded-full ${
                         (rowIndex + colIndex) % 2 === 0
                           ? "bg-blue-200"
                           : "bg-blue-300"
                       }`}
                     >
                       {cell === "X" && (
-                        <div className="w-14 h-14 rounded-full bg-red-500" />
+                        <div className="w-10 h-10 rounded-full bg-red-500" />
                       )}
                       {cell === "O" && (
-                        <div className="w-14 h-14 rounded-full bg-yellow-500" />
+                        <div className="w-10 h-10 rounded-full bg-yellow-500" />
                       )}
                     </div>
                   </div>
