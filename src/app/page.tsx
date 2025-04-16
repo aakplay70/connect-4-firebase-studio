@@ -48,7 +48,7 @@ export default function ConnectFour() {
       return;
     }
 
-    // Animation using CSS classes
+   // Animation using CSS classes
     const animatePiece = (startRow: number, endRow: number, column: number) => {
       let currentRow = startRow;
       const animationInterval = setInterval(() => {
@@ -70,7 +70,6 @@ export default function ConnectFour() {
 
     animatePiece(-1, rowToDrop, col);
   };
-
 
   const checkWinner = () => {
     // Horizontal
@@ -185,7 +184,9 @@ export default function ConnectFour() {
         {!winner && !gameOver ? (
           <p className="text-lg">
             Current Player:{" "}
-            <span className="font-semibold text-yellow-500">{currentPlayer}</span>
+            <span className={`font-semibold text-${currentPlayer === "Red" ? "red" : "yellow"}-500`}>
+              {currentPlayer}
+            </span>
           </p>
         ) : null}
       </div>
