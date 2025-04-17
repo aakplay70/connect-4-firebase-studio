@@ -139,7 +139,7 @@ export default function ConnectFour() {
   }, [winner]);
 
   useEffect(() => {
-    if (currentPlayer === "Yellow" && !gameOver && !winner) {
+    if (currentPlayer === "Yellow" && !gameOver && !winner && !gameWonRef.current) {
       // It's the computer's turn
       setTimeout(() => {
         let computerMove;
@@ -160,7 +160,7 @@ export default function ConnectFour() {
     if (gameOver) {
           return;
         }
-  }, [currentPlayer, gameOver, winner, difficulty, board]);
+  }, [currentPlayer, gameOver, winner, difficulty, board, gameWonRef]);
 
   const getRandomMove = (board: Board): number | null => {
     const availableColumns: number[] = [];
@@ -263,7 +263,7 @@ export default function ConnectFour() {
   };
 
   const handleMove = (col: number) => {
-    if (gameOver || winner) return;
+    if (gameOver || winner || gameWonRef.current) return;
 
     // Find the next available row in the selected column
     let rowToDrop = -1;
@@ -293,7 +293,7 @@ export default function ConnectFour() {
 
 
   const checkDraw = () => {
-    if (gameOver) return;
+    if (gameOver || gameWonRef.current) return;
     for (let row = 0; row < ROWS; row++) {
       for (let col = 0; col < COLS; col++) {
         if (!board[row][col]) {
