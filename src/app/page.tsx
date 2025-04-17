@@ -329,16 +329,7 @@ export default function ConnectFour() {
             <SelectItem value="hard">Hard</SelectItem>
           </SelectContent>
         </Select>
-      <div className="mb-4">
-        {!winner && !gameOver ? (
-          <p className="text-lg">
-            Current Player:{" "}
-            <span className={`font-semibold text-${currentPlayer === "Red" ? "red" : "yellow"}-500`}>
-              {currentPlayer}
-            </span>
-          </p>
-        ) : null}
-      </div>
+      
       <div className="max-w-md w-full">
         <div className="grid bg-blue-500 rounded-md shadow-lg">
           {board.map((row, rowIndex) => (
@@ -399,3 +390,4 @@ export default function ConnectFour() {
   </div>
   );
 }
+
