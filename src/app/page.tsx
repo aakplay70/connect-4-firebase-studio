@@ -19,6 +19,8 @@ export default function ConnectFour() {
   const { toast } = useToast();
   const boardRef = useRef<HTMLDivElement>(null);
   const [confetti, setConfetti] = useState(false);
+  const [winningSequence, setWinningSequence] = useState<number[][]>([]);
+  const [flash, setFlash] = useState(false);
 
   function createBoard(): Board {
     return Array(ROWS)
@@ -27,8 +29,14 @@ export default function ConnectFour() {
   }
 
   useEffect(() => {
-    checkWinner();
-    checkDraw();
+    const result = checkWinner();
+    if (result) {
+      setWinningSequence(result.sequence);
+      setWinner(result.player);
+      setGameOver(true);
+    } else {
+      checkDraw();
+    }
   }, [board]);
 
   useEffect(() => {
@@ -37,6 +45,10 @@ export default function ConnectFour() {
       setTimeout(() => {
         setConfetti(false);
       }, 3000);
+      setFlash(true);
+      setTimeout(() => {
+        setFlash(false);
+      }, 2000);
     }
   }, [winner]);
 
@@ -79,13 +91,14 @@ export default function ConnectFour() {
           board[row][col] === board[row][col + 2] &&
           board[row][col] === board[row][col + 3]
         ) {
-          setWinner(board[row][col]);
-          setGameOver(true);
           toast({
             title: "We have a winner!",
             description: `Player ${board[row][col]} wins!`,
           });
-          return;
+          return {
+            player: board[row][col],
+            sequence: [[row, col], [row, col + 1], [row, col + 2], [row, col + 3]],
+          };
         }
       }
     }
@@ -99,13 +112,14 @@ export default function ConnectFour() {
           board[row][col] === board[row + 2][col] &&
           board[row][col] === board[row + 3][col]
         ) {
-          setWinner(board[row][col]);
-          setGameOver(true);
           toast({
             title: "We have a winner!",
             description: `Player ${board[row][col]} wins!`,
           });
-          return;
+          return {
+            player: board[row][col],
+            sequence: [[row, col], [row + 1, col], [row + 2, col], [row + 3, col]],
+          };
         }
       }
     }
@@ -119,13 +133,14 @@ export default function ConnectFour() {
           board[row][col] === board[row + 2][col + 2] &&
           board[row][col] === board[row + 3][col + 3]
         ) {
-          setWinner(board[row][col]);
-          setGameOver(true);
           toast({
             title: "We have a winner!",
             description: `Player ${board[row][col]} wins!`,
           });
-          return;
+          return {
+            player: board[row][col],
+            sequence: [[row, col], [row + 1, col + 1], [row + 2, col + 2], [row + 3, col + 3]],
+          };
         }
       }
     }
@@ -139,16 +154,19 @@ export default function ConnectFour() {
           board[row][col] === board[row + 2][col - 2] &&
           board[row][col] === board[row + 3][col - 3]
         ) {
-          setWinner(board[row][col]);
-          setGameOver(true);
           toast({
             title: "We have a winner!",
             description: `Player ${board[row][col]} wins!`,
           });
-          return;
+          return {
+            player: board[row][col],
+            sequence: [[row, col], [row + 1, col - 1], [row + 2, col - 2], [row + 3, col - 3]],
+          };
         }
       }
     }
+
+    return null;
   };
 
   const checkDraw = () => {
@@ -174,6 +192,7 @@ export default function ConnectFour() {
     setWinner(null);
     setGameOver(false);
     setConfetti(false);
+    setWinningSequence([]);
   };
 
   const confettiConfig = {
@@ -217,6 +236,10 @@ export default function ConnectFour() {
                         (rowIndex + colIndex) % 2 === 0
                           ? "bg-blue-200"
                           : "bg-blue-300"
+                      } ${
+                        flash && winningSequence.some(seq => seq[0] === rowIndex && seq[1] === colIndex)
+                          ? "animate-ping bg-opacity-75"
+                          : ""
                       }`}
                     >
                       {cell === "Red" && (
