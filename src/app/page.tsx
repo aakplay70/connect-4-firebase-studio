@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import Confetti from 'react-dom-confetti';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 const ROWS = 6;
 const COLS = 7;
@@ -95,6 +96,8 @@ export default function ConnectFour() {
   const [winningSequence, setWinningSequence] = useState<number[][]>([]);
   const [flash, setFlash] = useState(false);
   const [difficulty, setDifficulty] = useState<string>("easy");
+  const [youScore, setYouScore] = useState(0);
+  const [computerScore, setComputerScore] = useState(0);
 
   function createBoard(): Board {
     return Array(ROWS)
@@ -108,6 +111,11 @@ export default function ConnectFour() {
       setWinningSequence(result.sequence);
       setWinner(result.player);
       setGameOver(true);
+       if (result.player === "Red") {
+        setYouScore(prevScore => prevScore + 1);
+      } else {
+        setComputerScore(prevScore => prevScore + 1);
+      }
     } else {
       checkDraw();
     }
@@ -319,6 +327,10 @@ export default function ConnectFour() {
     <div className="flex flex-col items-center justify-center min-h-screen py-4">
       <h1 className="text-4xl font-bold mb-4 text-blue-600">Connect Four Fun</h1>
       <Confetti active={confetti} config={confettiConfig} />
+      <div className="flex space-x-4 mb-4">
+        <div>You: {youScore}</div>
+        <div>Computer: {computerScore}</div>
+      </div>
        <Select onValueChange={setDifficulty} defaultValue={difficulty}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select difficulty" />
@@ -390,4 +402,5 @@ export default function ConnectFour() {
   </div>
   );
 }
+
 
