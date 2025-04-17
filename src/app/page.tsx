@@ -98,6 +98,7 @@ export default function ConnectFour() {
   const [difficulty, setDifficulty] = useState<string>("easy");
   const [youScore, setYouScore] = useState(0);
   const [computerScore, setComputerScore] = useState(0);
+  const gameWonRef = useRef(false);
 
   function createBoard(): Board {
     return Array(ROWS)
@@ -107,11 +108,14 @@ export default function ConnectFour() {
 
   useEffect(() => {
     const result = checkWinner(board);
-    if (result) {
+    if (result && !gameWonRef.current) {
+      gameWonRef.current = true; // Prevent multiple score updates
+
       setWinningSequence(result.sequence);
       setWinner(result.player);
       setGameOver(true);
-       if (result.player === "Red") {
+
+      if (result.player === "Red") {
         setYouScore(prevScore => prevScore + 1);
       } else {
         setComputerScore(prevScore => prevScore + 1);
@@ -153,6 +157,9 @@ export default function ConnectFour() {
         }
       }, 500); // Delay for the computer's move
     }
+    if (gameOver) {
+          return;
+        }
   }, [currentPlayer, gameOver, winner, difficulty, board]);
 
   const getRandomMove = (board: Board): number | null => {
@@ -309,6 +316,7 @@ export default function ConnectFour() {
     setGameOver(false);
     setConfetti(false);
     setWinningSequence([]);
+    gameWonRef.current = false;
   };
 
   const confettiConfig = {
