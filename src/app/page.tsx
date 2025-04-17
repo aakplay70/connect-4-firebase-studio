@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,6 +16,7 @@ export default function ConnectFour() {
   const [winner, setWinner] = useState<Player>(null);
   const [gameOver, setGameOver] = useState(false);
   const { toast } = useToast();
+  const boardRef = useRef<HTMLDivElement>(null);
 
   function createBoard(): Board {
     return Array(ROWS)
@@ -48,27 +49,13 @@ export default function ConnectFour() {
       return;
     }
 
-    // Animation using CSS classes
-    const animatePiece = (startRow: number, endRow: number, column: number) => {
-      let currentRow = startRow;
-      const animationInterval = setInterval(() => {
-        if (currentRow > endRow) {
-          clearInterval(animationInterval);
-           // Create a new board with the move
-        const newBoard = board.map((r, i) =>
-          i === endRow ? r.map((c, j) => (j === col ? currentPlayer : c)) : r
-        );
+    // Create a new board with the move
+    const newBoard = board.map((r, i) =>
+      i === rowToDrop ? r.map((c, j) => (j === col ? currentPlayer : c)) : r
+    );
 
-        setBoard(newBoard);
-        setCurrentPlayer(currentPlayer === "Red" ? "Yellow" : "Red");
-          return;
-        }
-
-        currentRow++;
-      }, 100); // Adjust timing as needed
-    };
-
-    animatePiece(-1, rowToDrop, col);
+    setBoard(newBoard);
+    setCurrentPlayer(currentPlayer === "Red" ? "Yellow" : "Red");
   };
 
   const checkWinner = () => {
@@ -123,7 +110,7 @@ export default function ConnectFour() {
         ) {
           setWinner(board[row][col]);
           setGameOver(true);
-           toast({
+          toast({
             title: "We have a winner!",
             description: `Player ${board[row][col]} wins!`,
           });
@@ -143,7 +130,7 @@ export default function ConnectFour() {
         ) {
           setWinner(board[row][col]);
           setGameOver(true);
-           toast({
+          toast({
             title: "We have a winner!",
             description: `Player ${board[row][col]} wins!`,
           });
