@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import Confetti from 'react-dom-confetti';
 
 const ROWS = 6;
 const COLS = 7;
@@ -17,6 +18,7 @@ export default function ConnectFour() {
   const [gameOver, setGameOver] = useState(false);
   const { toast } = useToast();
   const boardRef = useRef<HTMLDivElement>(null);
+  const [confetti, setConfetti] = useState(false);
 
   function createBoard(): Board {
     return Array(ROWS)
@@ -28,6 +30,15 @@ export default function ConnectFour() {
     checkWinner();
     checkDraw();
   }, [board]);
+
+  useEffect(() => {
+    if (winner) {
+      setConfetti(true);
+      setTimeout(() => {
+        setConfetti(false);
+      }, 3000);
+    }
+  }, [winner]);
 
   const handleMove = (col: number) => {
     if (gameOver || winner) return;
@@ -162,11 +173,25 @@ export default function ConnectFour() {
     setCurrentPlayer("Red");
     setWinner(null);
     setGameOver(false);
+    setConfetti(false);
+  };
+
+  const confettiConfig = {
+    angle: 90,
+    spread: 45,
+    startVelocity: 45,
+    elementCount: 200,
+    dragFriction: 0.1,
+    duration: 3000,
+    colors: ["#FFC107", "#29ABE2", "#FFFFFF"],
+    width: "10px",
+    height: "10px",
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-4">
       <h1 className="text-4xl font-bold mb-4 text-blue-600">Connect Four Fun</h1>
+      <Confetti active={confetti} config={confettiConfig} />
       <div className="mb-4">
         {!winner && !gameOver ? (
           <p className="text-lg">
@@ -206,30 +231,30 @@ export default function ConnectFour() {
               ))}
             </div>
           ))}
-          <div className="grid grid-cols-7">
-            {Array.from({ length: COLS }, (_, i) => (
-              <div key={i} className="w-full">
-                <Button
-                  onClick={() => handleMove(i)}
-                  className="w-full bg-rose-100 text-blue-700 hover:bg-accent"
-                >
-                  Here
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="mt-4">
-          {!winner && !gameOver ? null : (
-            <Button
-              onClick={resetGame}
-              className="bg-blue-500 hover:bg-blue-700 text-white"
-            >
-              Reset Game
-            </Button>
-          )}
+        <div className="grid grid-cols-7">
+          {Array.from({ length: COLS }, (_, i) => (
+            <div key={i} className="w-full">
+              <Button
+                onClick={() => handleMove(i)}
+                className="w-full bg-rose-100 text-blue-700 hover:bg-accent"
+              >
+                Here
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
+      <div className="mt-4">
+        {!winner && !gameOver ? null : (
+          <Button
+            onClick={resetGame}
+            className="bg-blue-500 hover:bg-blue-700 text-white"
+          >
+            Reset Game
+          </Button>
+        )}
+      </div>
     </div>
+  </div>
   );
 }
