@@ -48,7 +48,7 @@ export default function ConnectFour() {
       return;
     }
 
-   // Animation using CSS classes
+    // Animation using CSS classes
     const animatePiece = (startRow: number, endRow: number, column: number) => {
       let currentRow = startRow;
       const animationInterval = setInterval(() => {
@@ -192,18 +192,6 @@ export default function ConnectFour() {
       </div>
       <div className="max-w-md w-full">
         <div className="grid bg-blue-500 rounded-md shadow-lg">
-          <div className="grid grid-cols-7">
-            {Array.from({ length: COLS }, (_, i) => (
-              <div key={i} className="w-full">
-                <Button
-                  onClick={() => handleMove(i)}
-                  className="w-full bg-rose-100 text-blue-700 hover:bg-accent"
-                >
-                  Here
-                </Button>
-              </div>
-            ))}
-          </div>
           {board.map((row, rowIndex) => (
             <div key={rowIndex} className="flex" style={{ height: "65px" }}>
               {row.map((cell, colIndex) => (
@@ -231,6 +219,18 @@ export default function ConnectFour() {
               ))}
             </div>
           ))}
+          <div className="grid grid-cols-7">
+            {Array.from({ length: COLS }, (_, i) => (
+              <div key={i} className="w-full">
+                <Button
+                  onClick={() => handleMove(i)}
+                  className="w-full bg-rose-100 text-blue-700 hover:bg-accent"
+                >
+                  Here
+                </Button>
+              </div>
+            ))}
+          </div>
         </div>
         <div className="mt-4">
           {!winner && !gameOver ? null : (
