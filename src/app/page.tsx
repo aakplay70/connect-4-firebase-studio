@@ -339,7 +339,15 @@ export default function ConnectFour() {
         <div>You: {youScore}</div>
         <div>Computer: {computerScore}</div>
       </div>
-       <div className="flex flex-col items-center justify-center mb-4">
+       <div className="flex flex-row items-center justify-between mb-4 w-full max-w-md">
+      {winner && (
+          <Button
+            onClick={resetGame}
+            className="bg-blue-500 hover:bg-blue-700 text-white mt-2"
+          >
+            Reset Game
+          </Button>
+        )}
         <Select onValueChange={setDifficulty} defaultValue={difficulty}>
           <SelectTrigger className="w-[120px]">
             <SelectValue placeholder="Select difficulty" />
@@ -350,14 +358,6 @@ export default function ConnectFour() {
             <SelectItem value="hard">Hard</SelectItem>
           </SelectContent>
         </Select>
-         {winner && (
-          <Button
-            onClick={resetGame}
-            className="bg-blue-500 hover:bg-blue-700 text-white mt-2"
-          >
-            Reset Game
-          </Button>
-        )}
         </div>
       
       <div className="max-w-md w-full">
