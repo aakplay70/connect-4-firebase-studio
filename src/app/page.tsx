@@ -4,12 +4,85 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import Confetti from 'react-dom-confetti';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ROWS = 6;
 const COLS = 7;
 
 type Player = "Red" | "Yellow" | null;
 type Board = Player[][];
+
+function checkWinner(board: Board): { player: Player; sequence: number[][] } | null {
+  // Horizontal
+  for (let row = 0; row < ROWS; row++) {
+    for (let col = 0; col < COLS - 3; col++) {
+      if (
+        board[row][col] &&
+        board[row][col] === board[row][col + 1] &&
+        board[row][col] === board[row][col + 2] &&
+        board[row][col] === board[row][col + 3]
+      ) {
+        return {
+          player: board[row][col],
+          sequence: [[row, col], [row, col + 1], [row, col + 2], [row, col + 3]],
+        };
+      }
+    }
+  }
+
+  // Vertical
+  for (let col = 0; col < COLS; col++) {
+    for (let row = 0; row < ROWS - 3; row++) {
+      if (
+        board[row][col] &&
+        board[row][col] === board[row + 1][col] &&
+        board[row][col] === board[row + 2][col] &&
+        board[row][col] === board[row + 3][col]
+      ) {
+        return {
+          player: board[row][col],
+          sequence: [[row, col], [row + 1, col], [row + 2, col], [row + 3, col]],
+        };
+      }
+    }
+  }
+
+  // Diagonal (top-left to bottom-right)
+  for (let row = 0; row < ROWS - 3; row++) {
+    for (let col = 0; col < COLS - 3; col++) {
+      if (
+        board[row][col] &&
+        board[row][col] === board[row + 1][col + 1] &&
+        board[row][col] === board[row + 2][col + 2] &&
+        board[row][col] === board[row + 3][col + 3]
+      ) {
+        return {
+          player: board[row][col],
+          sequence: [[row, col], [row + 1, col + 1], [row + 2, col + 2], [row + 3, col + 3]],
+        };
+      }
+    }
+  }
+
+  // Diagonal (top-right to bottom-left)
+  for (let row = 0; row < ROWS - 3; row++) {
+    for (let col = 3; col < COLS; col++) {
+      if (
+        board[row][col] &&
+        board[row][col] === board[row + 1][col - 1] &&
+        board[row][col] === board[row + 2][col - 2] &&
+        board[row][col] === board[row + 3][col - 3]
+      ) {
+        return {
+          player: board[row][col],
+          sequence: [[row, col], [row + 1, col - 1], [row + 2, col - 2], [row + 3, col - 3]],
+        };
+      }
+    }
+  }
+
+  return null;
+}
 
 export default function ConnectFour() {
   const [board, setBoard] = useState<Board>(createBoard());
@@ -21,6 +94,7 @@ export default function ConnectFour() {
   const [confetti, setConfetti] = useState(false);
   const [winningSequence, setWinningSequence] = useState<number[][]>([]);
   const [flash, setFlash] = useState(false);
+  const [difficulty, setDifficulty] = useState<string>("easy");
 
   function createBoard(): Board {
     return Array(ROWS)
@@ -29,7 +103,7 @@ export default function ConnectFour() {
   }
 
   useEffect(() => {
-    const result = checkWinner();
+    const result = checkWinner(board);
     if (result) {
       setWinningSequence(result.sequence);
       setWinner(result.player);
@@ -51,6 +125,127 @@ export default function ConnectFour() {
       }, 2000);
     }
   }, [winner]);
+
+  useEffect(() => {
+    if (currentPlayer === "Yellow" && !gameOver && !winner) {
+      // It's the computer's turn
+      setTimeout(() => {
+        let computerMove;
+        if (difficulty === "easy") {
+          computerMove = getRandomMove(board);
+        } else if (difficulty === "medium") {
+          computerMove = getMediumMove(board);
+        }
+        else {
+          computerMove = getHardMove(board);
+        }
+
+        if (computerMove !== null) {
+          handleMove(computerMove);
+        }
+      }, 500); // Delay for the computer's move
+    }
+  }, [currentPlayer, gameOver, winner, difficulty, board]);
+
+  const getRandomMove = (board: Board): number | null => {
+    const availableColumns: number[] = [];
+    for (let col = 0; col < COLS; col++) {
+      if (!board[0][col]) {
+        availableColumns.push(col);
+      }
+    }
+
+    if (availableColumns.length === 0) {
+      return null; // No moves available
+    }
+
+    const randomColumnIndex = Math.floor(Math.random() * availableColumns.length);
+    return availableColumns[randomColumnIndex];
+  };
+
+  // Basic medium level AI
+  const getMediumMove = (board: Board): number | null => {
+    // Check if the AI can win in the next move
+    for (let col = 0; col < COLS; col++) {
+      const tempBoard = makeMove(board, col, "Yellow");
+      if (tempBoard && checkWinner(tempBoard)?.player === "Yellow") {
+        return col;
+      }
+    }
+
+    // Check if the player can win in the next move and block them
+    for (let col = 0; col < COLS; col++) {
+      const tempBoard = makeMove(board, col, "Red");
+      if (tempBoard && checkWinner(tempBoard)?.player === "Red") {
+        return col;
+      }
+    }
+
+    // If no winning or blocking move, make a random move
+    return getRandomMove(board);
+  };
+
+    // Hard AI
+    const getHardMove = (board: Board): number | null => {
+      // Check if the AI can win in the next move
+      for (let col = 0; col < COLS; col++) {
+        const tempBoard = makeMove(board, col, "Yellow");
+        if (tempBoard && checkWinner(tempBoard)?.player === "Yellow") {
+          return col;
+        }
+      }
+  
+      // Check if the player can win in the next move and block them
+      for (let col = 0; col < COLS; col++) {
+        const tempBoard = makeMove(board, col, "Red");
+        if (tempBoard && checkWinner(tempBoard)?.player === "Red") {
+          return col;
+        }
+      }
+  
+      // Try to make a strategic move
+      for (let col = 0; col < COLS; col++) {
+        const tempBoard = makeMove(board, col, "Yellow");
+        if (tempBoard) {
+          // Check if this move leads to a favorable outcome
+          // (e.g., sets up a potential win or prevents the player from winning)
+          if (isFavorableMove(tempBoard, "Yellow")) {
+            return col;
+          }
+        }
+      }
+  
+      // If no strategic move, make a random move
+      return getRandomMove(board);
+    };
+  
+    // Helper function to check if a move is favorable for the AI
+    const isFavorableMove = (board: Board, player: Player): boolean => {
+      // Check if the move leads to a potential win or prevents the player from winning
+      // This is a simplified example, and you can add more sophisticated logic here
+      return false;
+    };
+
+  const makeMove = (board: Board, col: number, player: Player): Board | null => {
+    let rowToDrop = -1;
+    for (let row = ROWS - 1; row >= 0; row--) {
+      if (!board[row][col]) {
+        rowToDrop = row;
+        break;
+      }
+    }
+
+    if (rowToDrop === -1) {
+      return null; // Column is full
+    }
+
+    // Create a new board with the move
+    const newBoard = board.map((r, i) =>
+      i === rowToDrop ? r.map((c, j) => (j === col ? player : c)) : r
+    );
+
+    return newBoard;
+  };
 
   const handleMove = (col: number) => {
     if (gameOver || winner) return;
@@ -81,93 +276,6 @@ export default function ConnectFour() {
     setCurrentPlayer(currentPlayer === "Red" ? "Yellow" : "Red");
   };
 
-  const checkWinner = () => {
-    // Horizontal
-    for (let row = 0; row < ROWS; row++) {
-      for (let col = 0; col < COLS - 3; col++) {
-        if (
-          board[row][col] &&
-          board[row][col] === board[row][col + 1] &&
-          board[row][col] === board[row][col + 2] &&
-          board[row][col] === board[row][col + 3]
-        ) {
-          toast({
-            title: "We have a winner!",
-            description: `Player ${board[row][col]} wins!`,
-          });
-          return {
-            player: board[row][col],
-            sequence: [[row, col], [row, col + 1], [row, col + 2], [row, col + 3]],
-          };
-        }
-      }
-    }
-
-    // Vertical
-    for (let col = 0; col < COLS; col++) {
-      for (let row = 0; row < ROWS - 3; row++) {
-        if (
-          board[row][col] &&
-          board[row][col] === board[row + 1][col] &&
-          board[row][col] === board[row + 2][col] &&
-          board[row][col] === board[row + 3][col]
-        ) {
-          toast({
-            title: "We have a winner!",
-            description: `Player ${board[row][col]} wins!`,
-          });
-          return {
-            player: board[row][col],
-            sequence: [[row, col], [row + 1, col], [row + 2, col], [row + 3, col]],
-          };
-        }
-      }
-    }
-
-    // Diagonal (top-left to bottom-right)
-    for (let row = 0; row < ROWS - 3; row++) {
-      for (let col = 0; col < COLS - 3; col++) {
-        if (
-          board[row][col] &&
-          board[row][col] === board[row + 1][col + 1] &&
-          board[row][col] === board[row + 2][col + 2] &&
-          board[row][col] === board[row + 3][col + 3]
-        ) {
-          toast({
-            title: "We have a winner!",
-            description: `Player ${board[row][col]} wins!`,
-          });
-          return {
-            player: board[row][col],
-            sequence: [[row, col], [row + 1, col + 1], [row + 2, col + 2], [row + 3, col + 3]],
-          };
-        }
-      }
-    }
-
-    // Diagonal (top-right to bottom-left)
-    for (let row = 0; row < ROWS - 3; row++) {
-      for (let col = 3; col < COLS; col++) {
-        if (
-          board[row][col] &&
-          board[row][col] === board[row + 1][col - 1] &&
-          board[row][col] === board[row + 2][col - 2] &&
-          board[row][col] === board[row + 3][col - 3]
-        ) {
-          toast({
-            title: "We have a winner!",
-            description: `Player ${board[row][col]} wins!`,
-          });
-          return {
-            player: board[row][col],
-            sequence: [[row, col], [row + 1, col - 1], [row + 2, col - 2], [row + 3, col - 3]],
-          };
-        }
-      }
-    }
-
-    return null;
-  };
 
   const checkDraw = () => {
     if (gameOver) return;
@@ -211,6 +319,16 @@ export default function ConnectFour() {
     <div className="flex flex-col items-center justify-center min-h-screen py-4">
       <h1 className="text-4xl font-bold mb-4 text-blue-600">Connect Four Fun</h1>
       <Confetti active={confetti} config={confettiConfig} />
+       <Select onValueChange={setDifficulty} defaultValue={difficulty}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select difficulty" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="easy">Easy</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="hard">Hard</SelectItem>
+          </SelectContent>
+        </Select>
       <div className="mb-4">
         {!winner && !gameOver ? (
           <p className="text-lg">
