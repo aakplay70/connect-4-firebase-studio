@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import './styles.css';
+import Confetti from 'react-dom-confetti';
 
 const ROWS = 6;
 const COLS = 7;
@@ -99,7 +100,7 @@ export default function ConnectFour() {
   const [computerScore, setComputerScore] = useState(0);
   const gameWonRef = useRef(false);
   const [highlightedColumn, setHighlightedColumn] = useState<number | null>(null);
-  const [currentPlayer, setCurrentPlayer] = useState<Player>("Red"); // Initialize currentPlayer
+  const [isRedNext, setIsRedNext] = useState(true); // Initialize currentPlayer
 
   function createBoard(): Board {
     return Array(ROWS)
@@ -139,17 +140,17 @@ export default function ConnectFour() {
   }, [winner]);
 
   useEffect(() => {
-    if (currentPlayer === "Yellow" && !gameOver && !winner && !gameWonRef.current) {
+    if (isRedNext && !gameOver && !winner && !gameWonRef.current) {
       // It's the computer's turn
       setTimeout(() => {
         let computerMove;
         if (difficulty === "easy") {
-          computerMove = getRandomMove(board);
+          computerMove = getRandomMove(board, 2);
         } else if (difficulty === "medium") {
-          computerMove = getMediumMove(board);
+          computerMove = getMediumMove(board, 3);
         }
         else {
-          computerMove = getHardMove(board);
+          computerMove = getHardMove(board, 4);
         }
 
         if (computerMove !== null) {
@@ -160,26 +161,26 @@ export default function ConnectFour() {
     if (gameOver) {
           return;
         }
-  }, [currentPlayer, gameOver, winner, difficulty, board, gameWonRef]);
+  }, [isRedNext, gameOver, winner, difficulty, board, gameWonRef]);
 
-  const getRandomMove = (board: Board): number | null => {
-    const availableColumns: number[] = [];
-    for (let col = 0; col < COLS; col++) {
-      if (!board[0][col]) {
-        availableColumns.push(col);
+    const getRandomMove = (board: Board, scope: number): number | null => {
+      const availableColumns: number[] = [];
+      for (let col = 0; col < COLS; col++) {
+        if (!board[0][col]) {
+          availableColumns.push(col);
+        }
       }
-    }
-
-    if (availableColumns.length === 0) {
-      return null; // No moves available
-    }
-
-    const randomColumnIndex = Math.floor(Math.random() * availableColumns.length);
-    return availableColumns[randomColumnIndex];
-  };
+  
+      if (availableColumns.length === 0) {
+        return null; // No moves available
+      }
+  
+      const randomColumnIndex = Math.floor(Math.random() * availableColumns.length);
+      return availableColumns[randomColumnIndex];
+    };
 
   // Basic medium level AI
-  const getMediumMove = (board: Board): number | null => {
+  const getMediumMove = (board: Board, scope: number): number | null => {
     // Check if the AI can win in the next move
     for (let col = 0; col < COLS; col++) {
       const tempBoard = makeMove(board, col, "Yellow");
@@ -197,11 +198,11 @@ export default function ConnectFour() {
     }
 
     // If no winning or blocking move, make a random move
-    return getRandomMove(board);
+    return getRandomMove(board, scope);
   };
 
     // Hard AI
-    const getHardMove = (board: Board): number | null => {
+    const getHardMove = (board: Board, scope: number): number | null => {
       // Check if the AI can win in the next move
       for (let col = 0; col < COLS; col++) {
         const tempBoard = makeMove(board, col, "Yellow");
@@ -224,22 +225,22 @@ export default function ConnectFour() {
         if (tempBoard) {
           // Check if this move leads to a favorable outcome
           // (e.g., sets up a potential win or prevents the player from winning)
-          if (isFavorableMove(tempBoard, "Yellow")) {
+          if (isFavorableMove(tempBoard, "Yellow", scope)) {
             return col;
           }
         }
       }
   
       // If no strategic move, make a random move
-      return getRandomMove(board);
+      return getRandomMove(board, scope);
     };
   
     // Helper function to check if a move is favorable for the AI
-    const isFavorableMove = (board: Board, player: Player): boolean => {
-      // Check if the move leads to a potential win or prevents the player from winning
-      // This is a simplified example, and you can add more sophisticated logic here
-      return false;
-    };
+    const isFavorableMove = (board: Board, player: Player, scope: number): boolean => {
+        // Implement more sophisticated logic here.  This is a placeholder.
+        //  Iterate through possible moves and rate them based on potential future board states.
+        return false;
+      };
 
   const makeMove = (board: Board, col: number, player: Player): Board | null => {
     let rowToDrop = -1;
@@ -284,11 +285,11 @@ export default function ConnectFour() {
 
     // Create a new board with the move
     const newBoard = board.map((r, i) =>
-      i === rowToDrop ? r.map((c, j) => (j === col ? currentPlayer : c)) : r
+      i === rowToDrop ? r.map((c, j) => (j === col ? (isRedNext ? "Red" : "Yellow") : c)) : r
     );
 
     setBoard(newBoard);
-    setCurrentPlayer(currentPlayer === "Red" ? "Yellow" : "Red");
+    setIsRedNext(!isRedNext);
     setHighlightedColumn(null);
   };
 
@@ -318,7 +319,7 @@ export default function ConnectFour() {
     setWinningSequence([]);
     gameWonRef.current = false;
     setHighlightedColumn(null);
-    setCurrentPlayer("Red"); // Reset current player
+    setIsRedNext(true); // Reset current player
   };
 
   const confettiConfig = {
@@ -339,6 +340,13 @@ export default function ConnectFour() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-4">
+       {confetti && (
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          {...confettiConfig}
+        />
+      )}
       <h1 className="text-4xl font-bold mb-4 text-blue-600">Connect Four Fun</h1>
       <div className="flex space-x-4 mb-2">
         <div>You: {youScore}</div>
@@ -346,6 +354,14 @@ export default function ConnectFour() {
       </div>
 
       <div className="flex flex-row items-center justify-between mb-2 w-full max-w-md">
+      {winner && (
+          <Button
+            onClick={resetGame}
+            className="bg-blue-500 hover:bg-blue-700 text-white mt-2"
+          >
+            Play Again
+          </Button>
+        )}
         <Select onValueChange={setDifficulty} defaultValue={difficulty} className="w-[120px] h-8">
           <SelectTrigger className="w-[120px] h-8">
             <SelectValue placeholder="Select difficulty" />
@@ -356,14 +372,7 @@ export default function ConnectFour() {
             <SelectItem value="hard">Hard</SelectItem>
           </SelectContent>
         </Select>
-        {winner && (
-          <Button
-            onClick={resetGame}
-            className="bg-blue-500 hover:bg-blue-700 text-white mt-2"
-          >
-            Play Again
-          </Button>
-        )}
+
       </div>
 
       <div className="max-w-md w-full">
