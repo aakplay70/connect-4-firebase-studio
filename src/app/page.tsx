@@ -100,7 +100,7 @@ export default function ConnectFour() {
   const [youScore, setYouScore] = useState(0);
   const [computerScore, setComputerScore] = useState(0);
   const gameWonRef = useRef(false);
-    const [highlightedColumn, setHighlightedColumn] = useState<number | null>(null);
+  const [highlightedColumn, setHighlightedColumn] = useState<number | null>(null);
 
   function createBoard(): Board {
     return Array(ROWS)
@@ -290,7 +290,7 @@ export default function ConnectFour() {
     );
 
     setBoard(newBoard);
-        setCurrentPlayer(currentPlayer === "Red" ? "Yellow" : "Red");
+    setCurrentPlayer(currentPlayer === "Red" ? "Yellow" : "Red");
     setHighlightedColumn(null);
   };
 
@@ -320,7 +320,7 @@ export default function ConnectFour() {
     setConfetti(false);
     setWinningSequence([]);
     gameWonRef.current = false;
-        setHighlightedColumn(null);
+    setHighlightedColumn(null);
   };
 
   const confettiConfig = {
@@ -367,13 +367,16 @@ export default function ConnectFour() {
       <div className="max-w-md w-full">
         <div className="grid bg-blue-500 rounded-md shadow-lg">
           {board.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex" style={{ height: "65px" }}>
+            <div key={rowIndex} className="flex" style={{ height: "65px" }}
+              onMouseEnter={() => setHighlightedColumn(rowIndex)}
+              onMouseLeave={() => setHighlightedColumn(null)}
+              onClick={() => highlightedColumn !== null ? handleMove(highlightedColumn) : null}
+            >
               {row.map((cell, colIndex) => (
                 <div
                   key={colIndex}
                   className={`w-full h-full flex items-center justify-center p-1 ${highlightedColumn === colIndex ? 'hovered-column' : ''}`}
-                  onMouseEnter={() => setHighlightedColumn(colIndex)}
-                  onMouseLeave={() => setHighlightedColumn(null)}
+                  
                 >
                   <div className="w-full h-full flex items-center justify-center">
                     <div
@@ -399,20 +402,8 @@ export default function ConnectFour() {
               ))}
             </div>
           ))}
-        <div className="grid grid-cols-7">
-          {Array.from({ length: COLS }, (_, i) => (
-            <div key={i} className="w-full">
-              <Button
-                onClick={() => handleMove(i)}
-                className="w-full bg-rose-100 text-blue-700 hover:bg-accent"
-              >
-                Here
-              </Button>
-            </div>
-          ))}
         </div>
       </div>
     </div>
-  </div>
   );
 }
