@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import Confetti from 'react-dom-confetti';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import './styles.css';
 
 const ROWS = 6;
 const COLS = 7;
@@ -99,6 +100,7 @@ export default function ConnectFour() {
   const [youScore, setYouScore] = useState(0);
   const [computerScore, setComputerScore] = useState(0);
   const gameWonRef = useRef(false);
+    const [highlightedColumn, setHighlightedColumn] = useState<number | null>(null);
 
   function createBoard(): Board {
     return Array(ROWS)
@@ -288,7 +290,8 @@ export default function ConnectFour() {
     );
 
     setBoard(newBoard);
-    setCurrentPlayer(currentPlayer === "Red" ? "Yellow" : "Red");
+        setCurrentPlayer(currentPlayer === "Red" ? "Yellow" : "Red");
+    setHighlightedColumn(null);
   };
 
 
@@ -317,6 +320,7 @@ export default function ConnectFour() {
     setConfetti(false);
     setWinningSequence([]);
     gameWonRef.current = false;
+        setHighlightedColumn(null);
   };
 
   const confettiConfig = {
@@ -335,11 +339,11 @@ export default function ConnectFour() {
     <div className="flex flex-col items-center justify-center min-h-screen py-4">
       <h1 className="text-4xl font-bold mb-4 text-blue-600">Connect Four Fun</h1>
       <Confetti active={confetti} config={confettiConfig} />
-      <div className="flex space-x-4 mb-4">
+      <div className="flex space-x-4 mb-2">
         <div>You: {youScore}</div>
         <div>Computer: {computerScore}</div>
       </div>
-       <div className="flex flex-row items-center justify-between mb-4 w-full max-w-md">
+      <div className="flex flex-row items-center justify-between mb-2 w-full max-w-md">
       {winner && (
           <Button
             onClick={resetGame}
@@ -348,8 +352,8 @@ export default function ConnectFour() {
             Reset Game
           </Button>
         )}
-        <Select onValueChange={setDifficulty} defaultValue={difficulty}>
-          <SelectTrigger className="w-[120px]">
+        <Select onValueChange={setDifficulty} defaultValue={difficulty} className="ml-auto">
+          <SelectTrigger className="w-[120px] h-8">
             <SelectValue placeholder="Select difficulty" />
           </SelectTrigger>
           <SelectContent>
@@ -367,7 +371,9 @@ export default function ConnectFour() {
               {row.map((cell, colIndex) => (
                 <div
                   key={colIndex}
-                  className="w-full h-full flex items-center justify-center p-1"
+                  className={`w-full h-full flex items-center justify-center p-1 ${highlightedColumn === colIndex ? 'hovered-column' : ''}`}
+                  onMouseEnter={() => setHighlightedColumn(colIndex)}
+                  onMouseLeave={() => setHighlightedColumn(null)}
                 >
                   <div className="w-full h-full flex items-center justify-center">
                     <div
