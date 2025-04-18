@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import Confetti from 'react-dom-confetti';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import './styles.css';
@@ -116,12 +115,6 @@ export default function ConnectFour() {
       setWinningSequence(result.sequence);
       setWinner(result.player);
       setGameOver(true);
-
-      if (result.player === "Red") {
-        setYouScore(prevScore => prevScore + 1);
-      } else {
-        setComputerScore(prevScore => prevScore + 1);
-      }
     } else {
       checkDraw();
     }
@@ -129,6 +122,11 @@ export default function ConnectFour() {
 
   useEffect(() => {
     if (winner) {
+      if (winner === "Red") {
+        setYouScore(prevScore => prevScore + 1);
+      } else {
+        setComputerScore(prevScore => prevScore + 1);
+      }
       setConfetti(true);
       setTimeout(() => {
         setConfetti(false);
@@ -336,30 +334,19 @@ export default function ConnectFour() {
   };
 
   const handleClick = (colIndex: number) => {
-    if (highlightedColumn === colIndex) {
-        handleMove(colIndex);
-    }
+    handleMove(colIndex);
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-4">
       <h1 className="text-4xl font-bold mb-4 text-blue-600">Connect Four Fun</h1>
-      <Confetti active={confetti} config={confettiConfig} />
       <div className="flex space-x-4 mb-2">
         <div>You: {youScore}</div>
         <div>Computer: {computerScore}</div>
       </div>
-        
+
       <div className="flex flex-row items-center justify-between mb-2 w-full max-w-md">
-        {winner && (
-          <Button
-            onClick={resetGame}
-            className="bg-blue-500 hover:bg-blue-700 text-white mt-2"
-          >
-            Play Again
-          </Button>
-        )}
-        <Select onValueChange={setDifficulty} defaultValue={difficulty} className="ml-auto">
+        <Select onValueChange={setDifficulty} defaultValue={difficulty} className="w-[120px] h-8">
           <SelectTrigger className="w-[120px] h-8">
             <SelectValue placeholder="Select difficulty" />
           </SelectTrigger>
@@ -369,6 +356,14 @@ export default function ConnectFour() {
             <SelectItem value="hard">Hard</SelectItem>
           </SelectContent>
         </Select>
+        {winner && (
+          <Button
+            onClick={resetGame}
+            className="bg-blue-500 hover:bg-blue-700 text-white mt-2"
+          >
+            Play Again
+          </Button>
+        )}
       </div>
 
       <div className="max-w-md w-full">
