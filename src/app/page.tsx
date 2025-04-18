@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -87,44 +87,32 @@ function checkWinner(board: Board): { player: Player; sequence: number[][] } | n
 }
 
 export default function ConnectFour() {
-  const [board, setBoard] = useState<Board>(createBoard());
-  const [winner, setWinner] = useState<Player>(null);
-  const [gameOver, setGameOver] = useState(false);
-  const { toast } = useToast();
-  const boardRef = useRef<HTMLDivElement>(null);
-  const [confetti, setConfetti] = useState(false);
-  const [winningSequence, setWinningSequence] = useState<number[][]>([]);
-  const [flash, setFlash] = useState(false);
-  const [difficulty, setDifficulty] = useState<string>("easy");
   const [youScore, setYouScore] = useState(0);
   const [computerScore, setComputerScore] = useState(0);
-  const gameWonRef = useRef(false);
-  const [highlightedColumn, setHighlightedColumn] = useState<number | null>(null);
-  const [isRedNext, setIsRedNext] = useState(true); // Initialize currentPlayer
   const [lastLoser, setLastLoser] = useState<Player>(null);
+  const [isRedNext, setIsRedNext] = useState(true);
+  const [difficulty, setDifficulty] = useState<string>("easy");
+  const [winner, setWinner] = useState<Player>(null);
+  const [winningSequence, setWinningSequence] = useState<number[][]>([]);
+  const [highlightedColumn, setHighlightedColumn] = useState<number | null>(null);
+  const [confetti, setConfetti] = useState(false);
+  const [flash, setFlash] = useState(false);
+  const { toast } = useToast();
+  const gameWonRef = useRef(false);
+  const boardRef = useRef<HTMLDivElement>(null);
 
-  function createBoard(): Board {
-    return Array(ROWS)
-      .fill(null)
-      .map(() => Array(COLS).fill(null));
-  }
+  const initialBoard = useCallback(() => Array(ROWS).fill(null).map(() => Array(COLS).fill(null)), []);
+  const [board, setBoard] = useState<Board>(initialBoard());
+  const [gameOver, setGameOver] = useState(false);
 
   useEffect(() => {
     const result = checkWinner(board);
     if (result && !gameWonRef.current) {
-      gameWonRef.current = true; // Prevent multiple score updates
-
+      gameWonRef.current = true;
       setWinningSequence(result.sequence);
       setWinner(result.player);
       setGameOver(true);
-    } else {
-      checkDraw();
-    }
-  }, [board]);
-
-  useEffect(() => {
-    if (winner) {
-      if (winner === "Red") {
+      if (result.player === "Red") {
         setYouScore(prevScore => prevScore + 1);
         setLastLoser("Yellow");
       } else {
@@ -132,59 +120,58 @@ export default function ConnectFour() {
         setLastLoser("Red");
       }
       setConfetti(true);
-      setTimeout(() => {
-        setConfetti(false);
-      }, 3000);
       setFlash(true);
-      setTimeout(() => {
-        setFlash(false);
-      }, 2000);
+
+      setTimeout(() => setConfetti(false), 3000);
+      setTimeout(() => setFlash(false), 2000);
+    } else if (!winner) {
+      checkDraw();
     }
-  }, [winner]);
+  }, [board, winner]);
 
   useEffect(() => {
     if (!isRedNext && !gameOver && !winner && !gameWonRef.current) {
-      // It's the computer's turn
-      setTimeout(() => {
+      const getComputerMove = () => {
         let computerMove;
-        if (difficulty === "easy") {
-          computerMove = getRandomMove(board, 2);
-        } else if (difficulty === "medium") {
-          computerMove = getMediumMove(board, 3);
+        switch (difficulty) {
+          case "easy":
+            computerMove = getRandomMove(board, 2);
+            break;
+          case "medium":
+            computerMove = getMediumMove(board, 3);
+            break;
+          case "hard":
+            computerMove = getHardMove(board, 4);
+            break;
+          default:
+            computerMove = getRandomMove(board, 2);
         }
-        else {
-          computerMove = getHardMove(board, 4);
-        }
-
         if (computerMove !== null) {
           handleMove(computerMove);
         }
-      }, 500); // Delay for the computer's move
+      };
+
+      setTimeout(getComputerMove, 500);
     }
-    if (gameOver) {
-          return;
-        }
   }, [isRedNext, gameOver, winner, difficulty, board, gameWonRef]);
 
-    const getRandomMove = (board: Board, scope: number): number | null => {
-      const availableColumns: number[] = [];
-      for (let col = 0; col < COLS; col++) {
-        if (!board[0][col]) {
-          availableColumns.push(col);
-        }
+  const getRandomMove = useCallback((board: Board, scope: number): number | null => {
+    const availableColumns: number[] = [];
+    for (let col = 0; col < COLS; col++) {
+      if (!board[0][col]) {
+        availableColumns.push(col);
       }
-  
-      if (availableColumns.length === 0) {
-        return null; // No moves available
-      }
-  
-      const randomColumnIndex = Math.floor(Math.random() * availableColumns.length);
-      return availableColumns[randomColumnIndex];
-    };
+    }
 
-  // Basic medium level AI
-  const getMediumMove = (board: Board, scope: number): number | null => {
-    // Check if the AI can win in the next move
+    if (availableColumns.length === 0) {
+      return null; // No moves available
+    }
+
+    const randomColumnIndex = Math.floor(Math.random() * availableColumns.length);
+    return availableColumns[randomColumnIndex];
+  }, []);
+
+  const getMediumMove = useCallback((board: Board, scope: number): number | null => {
     for (let col = 0; col < COLS; col++) {
       const tempBoard = makeMove(board, col, "Yellow");
       if (tempBoard && checkWinner(tempBoard)?.player === "Yellow") {
@@ -192,7 +179,6 @@ export default function ConnectFour() {
       }
     }
 
-    // Check if the player can win in the next move and block them
     for (let col = 0; col < COLS; col++) {
       const tempBoard = makeMove(board, col, "Red");
       if (tempBoard && checkWinner(tempBoard)?.player === "Red") {
@@ -200,52 +186,41 @@ export default function ConnectFour() {
       }
     }
 
-    // If no winning or blocking move, make a random move
     return getRandomMove(board, scope);
-  };
+  }, [getRandomMove]);
 
-    // Hard AI
-    const getHardMove = (board: Board, scope: number): number | null => {
-      // Check if the AI can win in the next move
-      for (let col = 0; col < COLS; col++) {
-        const tempBoard = makeMove(board, col, "Yellow");
-        if (tempBoard && checkWinner(tempBoard)?.player === "Yellow") {
+  const getHardMove = useCallback((board: Board, scope: number): number | null => {
+    for (let col = 0; col < COLS; col++) {
+      const tempBoard = makeMove(board, col, "Yellow");
+      if (tempBoard && checkWinner(tempBoard)?.player === "Yellow") {
+        return col;
+      }
+    }
+
+    for (let col = 0; col < COLS; col++) {
+      const tempBoard = makeMove(board, col, "Red");
+      if (tempBoard && checkWinner(tempBoard)?.player === "Red") {
+        return col;
+      }
+    }
+
+    for (let col = 0; col < COLS; col++) {
+      const tempBoard = makeMove(board, col, "Yellow");
+      if (tempBoard) {
+        if (isFavorableMove(tempBoard, "Yellow", scope)) {
           return col;
         }
       }
-  
-      // Check if the player can win in the next move and block them
-      for (let col = 0; col < COLS; col++) {
-        const tempBoard = makeMove(board, col, "Red");
-        if (tempBoard && checkWinner(tempBoard)?.player === "Red") {
-          return col;
-        }
-      }
-  
-      // Try to make a strategic move
-      for (let col = 0; col < COLS; col++) {
-        const tempBoard = makeMove(board, col, "Yellow");
-        if (tempBoard) {
-          // Check if this move leads to a favorable outcome
-          // (e.g., sets up a potential win or prevents the player from winning)
-          if (isFavorableMove(tempBoard, "Yellow", scope)) {
-            return col;
-          }
-        }
-      }
-  
-      // If no strategic move, make a random move
-      return getRandomMove(board, scope);
-    };
-  
-    // Helper function to check if a move is favorable for the AI
-    const isFavorableMove = (board: Board, player: Player, scope: number): boolean => {
-        // Implement more sophisticated logic here.  This is a placeholder.
-        //  Iterate through possible moves and rate them based on potential future board states.
-        return false;
-      };
+    }
 
-  const makeMove = (board: Board, col: number, player: Player): Board | null => {
+    return getRandomMove(board, scope);
+  }, [getRandomMove]);
+
+  const isFavorableMove = useCallback((board: Board, player: Player, scope: number): boolean => {
+    return false;
+  }, []);
+
+  const makeMove = useCallback((board: Board, col: number, player: Player): Board | null => {
     let rowToDrop = -1;
     for (let row = ROWS - 1; row >= 0; row--) {
       if (!board[row][col]) {
@@ -258,18 +233,16 @@ export default function ConnectFour() {
       return null; // Column is full
     }
 
-    // Create a new board with the move
     const newBoard = board.map((r, i) =>
       i === rowToDrop ? r.map((c, j) => (j === col ? player : c)) : r
     );
 
     return newBoard;
-  };
+  }, []);
 
-  const handleMove = (col: number) => {
+  const handleMove = useCallback((col: number) => {
     if (gameOver || winner || gameWonRef.current) return;
 
-    // Find the next available row in the selected column
     let rowToDrop = -1;
     for (let row = ROWS - 1; row >= 0; row--) {
       if (!board[row][col]) {
@@ -286,7 +259,6 @@ export default function ConnectFour() {
       return;
     }
 
-    // Create a new board with the move
     const newBoard = board.map((r, i) =>
       i === rowToDrop ? r.map((c, j) => (j === col ? (isRedNext ? "Red" : "Yellow") : c)) : r
     );
@@ -294,37 +266,29 @@ export default function ConnectFour() {
     setBoard(newBoard);
     setIsRedNext(!isRedNext);
     setHighlightedColumn(null);
-  };
+  }, [board, isRedNext, gameOver, winner, toast]);
 
-
-  const checkDraw = () => {
+  const checkDraw = useCallback(() => {
     if (gameOver || gameWonRef.current) return;
-    for (let row = 0; row < ROWS; row++) {
-      for (let col = 0; col < COLS; col++) {
-        if (!board[row][col]) {
-          return;
-        }
-      }
+    if (board.every(row => row.every(cell => cell !== null))) {
+      setGameOver(true);
+      toast({
+        title: "It's a Draw!",
+        description: "No one wins.",
+      });
     }
+  }, [board, gameOver]);
 
-    setGameOver(true);
-    toast({
-      title: "It's a Draw!",
-      description: "No one wins.",
-    });
-  };
-
-  const resetGame = () => {
-    setBoard(createBoard());
+  const resetGame = useCallback(() => {
+    setBoard(initialBoard());
     setWinner(null);
     setGameOver(false);
     setConfetti(false);
     setWinningSequence([]);
     gameWonRef.current = false;
     setHighlightedColumn(null);
-    // Determine the first player based on the last loser, or default to you if it's the first game
     setIsRedNext(lastLoser === "Yellow" || lastLoser === null);
-  };
+  }, [lastLoser, initialBoard]);
 
   const confettiConfig = {
     angle: 90,
@@ -338,24 +302,29 @@ export default function ConnectFour() {
     height: "10px",
   };
 
-  const handleClick = (colIndex: number) => {
+  const handleMouseEnter = (colIndex: number) => {
+    setHighlightedColumn(colIndex);
+  };
+
+  const handleMouseLeave = () => {
+    setHighlightedColumn(null);
+  };
+
+  const handleGridClick = (colIndex: number) => {
     handleMove(colIndex);
   };
 
-    useEffect(() => {
-      // Determine the first player when the component mounts or when a new game starts
-      if (lastLoser === null) {
-        // First game: Player (Red) goes first
-        setIsRedNext(true);
-      } else {
-        // Subsequent games: Loser of the previous game goes first
-        setIsRedNext(lastLoser === "Yellow"); // Red goes first if Yellow lost last time
-      }
-    }, [lastLoser]);
+  useEffect(() => {
+    if (lastLoser === null) {
+      setIsRedNext(true);
+    } else {
+      setIsRedNext(lastLoser === "Yellow");
+    }
+  }, [lastLoser]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-4">
-       {confetti && (
+      {confetti && (
         <Confetti
           width={window.innerWidth}
           height={window.innerHeight}
@@ -363,18 +332,18 @@ export default function ConnectFour() {
         />
       )}
       <h1 className="text-4xl font-bold mb-4 text-blue-600">Connect Four Fun</h1>
-      <div className="flex space-x-4 mb-2">
-        <div>You: {youScore}</div>
-        <div>Computer: {computerScore}</div>
-      </div>
-
-      <div className="flex flex-row items-center justify-between mb-2 w-full max-w-md">
+      <div className="flex items-center justify-between mb-2 w-full max-w-md">
         <Button
           onClick={resetGame}
           className={cn("bg-blue-500 hover:bg-blue-700 text-white mt-2", winner ? '' : 'hidden')}
         >
           Play Again
         </Button>
+
+        <div className="flex space-x-4">
+          <div>You: {youScore}</div>
+          <div>Computer: {computerScore}</div>
+        </div>
         <Select onValueChange={setDifficulty} defaultValue={difficulty} className="w-[120px] h-8">
           <SelectTrigger className="w-[120px] h-8">
             <SelectValue placeholder="Select difficulty" />
@@ -385,7 +354,6 @@ export default function ConnectFour() {
             <SelectItem value="hard">Hard</SelectItem>
           </SelectContent>
         </Select>
-
       </div>
 
       <div className="max-w-md w-full">
@@ -399,9 +367,9 @@ export default function ConnectFour() {
                 <div
                   key={colIndex}
                   className={`w-full h-full flex items-center justify-center p-1 ${highlightedColumn === colIndex ? 'hovered-column' : ''}`}
-                  onClick={() => handleClick(colIndex)}
-                  onMouseEnter={() => setHighlightedColumn(colIndex)}
-                  onMouseLeave={() => setHighlightedColumn(null)}
+                  onClick={() => handleGridClick(colIndex)}
+                  onMouseEnter={() => handleMouseEnter(colIndex)}
+                  onMouseLeave={() => handleMouseLeave()}
                 >
                   <div className="w-full h-full flex items-center justify-center">
                     <div
