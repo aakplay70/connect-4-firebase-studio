@@ -101,6 +101,7 @@ export default function ConnectFour() {
   const gameWonRef = useRef(false);
   const [highlightedColumn, setHighlightedColumn] = useState<number | null>(null);
   const [isRedNext, setIsRedNext] = useState(true); // Initialize currentPlayer
+  const [lastLoser, setLastLoser] = useState<Player>(null);
 
   function createBoard(): Board {
     return Array(ROWS)
@@ -125,8 +126,10 @@ export default function ConnectFour() {
     if (winner) {
       if (winner === "Red") {
         setYouScore(prevScore => prevScore + 1);
+        setLastLoser("Yellow");
       } else {
         setComputerScore(prevScore => prevScore + 1);
+        setLastLoser("Red");
       }
       setConfetti(true);
       setTimeout(() => {
@@ -140,7 +143,7 @@ export default function ConnectFour() {
   }, [winner]);
 
   useEffect(() => {
-    if (isRedNext && !gameOver && !winner && !gameWonRef.current) {
+    if (!isRedNext && !gameOver && !winner && !gameWonRef.current) {
       // It's the computer's turn
       setTimeout(() => {
         let computerMove;
@@ -319,7 +322,8 @@ export default function ConnectFour() {
     setWinningSequence([]);
     gameWonRef.current = false;
     setHighlightedColumn(null);
-    setIsRedNext(true); // Reset current player
+    // Determine the first player based on the last loser, or default to you if it's the first game
+    setIsRedNext(lastLoser === "Yellow" || lastLoser === null);
   };
 
   const confettiConfig = {
@@ -338,6 +342,17 @@ export default function ConnectFour() {
     handleMove(colIndex);
   };
 
+    useEffect(() => {
+      // Determine the first player when the component mounts or when a new game starts
+      if (lastLoser === null) {
+        // First game: Player (Red) goes first
+        setIsRedNext(true);
+      } else {
+        // Subsequent games: Loser of the previous game goes first
+        setIsRedNext(lastLoser === "Yellow"); // Red goes first if Yellow lost last time
+      }
+    }, [lastLoser]);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-4">
        {confetti && (
@@ -354,14 +369,12 @@ export default function ConnectFour() {
       </div>
 
       <div className="flex flex-row items-center justify-between mb-2 w-full max-w-md">
-      {winner && (
-          <Button
-            onClick={resetGame}
-            className="bg-blue-500 hover:bg-blue-700 text-white mt-2"
-          >
-            Play Again
-          </Button>
-        )}
+        <Button
+          onClick={resetGame}
+          className={cn("bg-blue-500 hover:bg-blue-700 text-white mt-2", winner ? '' : 'hidden')}
+        >
+          Play Again
+        </Button>
         <Select onValueChange={setDifficulty} defaultValue={difficulty} className="w-[120px] h-8">
           <SelectTrigger className="w-[120px] h-8">
             <SelectValue placeholder="Select difficulty" />
