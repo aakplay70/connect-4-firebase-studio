@@ -88,7 +88,6 @@ function checkWinner(board: Board): { player: Player; sequence: number[][] } | n
 
 export default function ConnectFour() {
   const [board, setBoard] = useState<Board>(createBoard());
-  const [currentPlayer, setCurrentPlayer] = useState<Player>("Red");
   const [winner, setWinner] = useState<Player>(null);
   const [gameOver, setGameOver] = useState(false);
   const { toast } = useToast();
@@ -101,6 +100,7 @@ export default function ConnectFour() {
   const [computerScore, setComputerScore] = useState(0);
   const gameWonRef = useRef(false);
   const [highlightedColumn, setHighlightedColumn] = useState<number | null>(null);
+  const [currentPlayer, setCurrentPlayer] = useState<Player>("Red"); // Initialize currentPlayer
 
   function createBoard(): Board {
     return Array(ROWS)
@@ -314,13 +314,13 @@ export default function ConnectFour() {
 
   const resetGame = () => {
     setBoard(createBoard());
-    setCurrentPlayer("Red");
     setWinner(null);
     setGameOver(false);
     setConfetti(false);
     setWinningSequence([]);
     gameWonRef.current = false;
     setHighlightedColumn(null);
+    setCurrentPlayer("Red"); // Reset current player
   };
 
   const confettiConfig = {
@@ -343,6 +343,7 @@ export default function ConnectFour() {
     setHighlightedColumn(null);
   };
 
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-4">
       <h1 className="text-4xl font-bold mb-4 text-blue-600">Connect Four Fun</h1>
@@ -351,13 +352,14 @@ export default function ConnectFour() {
         <div>You: {youScore}</div>
         <div>Computer: {computerScore}</div>
       </div>
+        
       <div className="flex flex-row items-center justify-between mb-2 w-full max-w-md">
-      {winner && (
+        {winner && (
           <Button
             onClick={resetGame}
             className="bg-blue-500 hover:bg-blue-700 text-white mt-2"
           >
-            Reset Game
+            Play Again
           </Button>
         )}
         <Select onValueChange={setDifficulty} defaultValue={difficulty} className="ml-auto">
@@ -370,8 +372,8 @@ export default function ConnectFour() {
             <SelectItem value="hard">Hard</SelectItem>
           </SelectContent>
         </Select>
-        </div>
-      
+      </div>
+
       <div className="max-w-md w-full">
         <div className="grid bg-blue-500 rounded-md shadow-lg"
           ref={boardRef}
