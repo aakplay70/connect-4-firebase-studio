@@ -335,6 +335,14 @@ export default function ConnectFour() {
     height: "10px",
   };
 
+  const handleMouseEnter = (colIndex: number) => {
+    setHighlightedColumn(colIndex);
+  };
+
+  const handleMouseLeave = () => {
+    setHighlightedColumn(null);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-4">
       <h1 className="text-4xl font-bold mb-4 text-blue-600">Connect Four Fun</h1>
@@ -365,18 +373,19 @@ export default function ConnectFour() {
         </div>
       
       <div className="max-w-md w-full">
-        <div className="grid bg-blue-500 rounded-md shadow-lg">
+        <div className="grid bg-blue-500 rounded-md shadow-lg"
+          ref={boardRef}
+          onMouseLeave={handleMouseLeave}
+        >
           {board.map((row, rowIndex) => (
             <div key={rowIndex} className="flex" style={{ height: "65px" }}
-              onMouseEnter={() => setHighlightedColumn(rowIndex)}
-              onMouseLeave={() => setHighlightedColumn(null)}
-              onClick={() => highlightedColumn !== null ? handleMove(highlightedColumn) : null}
             >
               {row.map((cell, colIndex) => (
                 <div
                   key={colIndex}
                   className={`w-full h-full flex items-center justify-center p-1 ${highlightedColumn === colIndex ? 'hovered-column' : ''}`}
-                  
+                  onMouseEnter={() => handleMouseEnter(colIndex)}
+                  onClick={() => highlightedColumn !== null ? handleMove(highlightedColumn) : null}
                 >
                   <div className="w-full h-full flex items-center justify-center">
                     <div
