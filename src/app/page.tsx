@@ -189,36 +189,155 @@ export default function ConnectFour() {
     return getRandomMove(board, scope);
   }, [getRandomMove]);
 
-  const getHardMove = useCallback((board: Board, scope: number): number | null => {
-    for (let col = 0; col < COLS; col++) {
-      const tempBoard = makeMove(board, col, "Yellow");
-      if (tempBoard && checkWinner(tempBoard)?.player === "Yellow") {
-        return col;
-      }
-    }
-
-    for (let col = 0; col < COLS; col++) {
-      const tempBoard = makeMove(board, col, "Red");
-      if (tempBoard && checkWinner(tempBoard)?.player === "Red") {
-        return col;
-      }
-    }
-
-    for (let col = 0; col < COLS; col++) {
-      const tempBoard = makeMove(board, col, "Yellow");
-      if (tempBoard) {
-        if (isFavorableMove(tempBoard, "Yellow", scope)) {
-          return col;
+  //Forward declaration of isFavorableMove for getHardMove
+  /**
+   * Determines a strategically advantageous move for the AI.
+   * It looks beyond immediate wins or blocks, trying to find moves that set up future wins
+   * or prevent opponent setups.
+   * @param currentBoard The current state of the game board.
+   * @param player The current player (AI).
+   * @param opponent The opponent player.
+   * @returns The column number for a favorable move, or null if none is found.
+   */
+  const isFavorableMove = useCallback((currentBoard: Board, player: Player, opponent: Player): number | null => {
+    /**
+     * Simulates a move on a given board state.
+     * Creates a new board with the move, ensuring the original board is not modified (immutability).
+     * @param b The board to simulate the move on.
+     * @param col The column where the piece is dropped.
+     * @param p The player making the move.
+     * @returns A new board state with the move, or null if the column is full.
+     */
+    const simulateMoveLocal = (b: Board, col: number, p: Player): Board | null => {
+      let rowToDrop = -1;
+      for (let r = ROWS - 1; r >= 0; r--) {
+        if (!b[r][col]) {
+          rowToDrop = r;
+          break;
         }
       }
+      if (rowToDrop === -1) return null; // Column is full
+
+      // Create a new board with the move
+      return b.map((rowArr, rIndex) =>
+        rIndex === rowToDrop
+          ? rowArr.map((cell, cIndex) => (cIndex === col ? p : cell))
+          : [...rowArr] // Ensure new array instance for unmodified rows
+      );
+    };
+
+    /**
+     * Checks if player 'p' can win on their next move from the given board state 'b'.
+     * It iterates through all columns, simulates a move for 'p', and checks for a win.
+     * This is used to see if a board state offers an immediate winning opportunity.
+     * @param b The board state to check.
+     * @param p The player to check for a winning move.
+     * @returns An object { col, boardAfterMove } if a win is found, otherwise null.
+     */
+    const checkThreeAndOpenLocal = (b: Board, p: Player): { col: number, boardAfterMove: Board } | null => {
+      for (let c = 0; c < COLS; c++) {
+        if (b[0][c]) continue; // Column is full, cannot place piece here
+
+        const boardAfterHypotheticalMove = simulateMoveLocal(b, c, p);
+        if (boardAfterHypotheticalMove && checkWinner(boardAfterHypotheticalMove)?.player === p) {
+          // Placing a piece in column 'c' on board 'b' results in a win for player 'p'.
+          return { col: c, boardAfterMove: boardAfterHypotheticalMove };
+        }
+      }
+      return null;
+    };
+
+    // Iterate through columns with a center preference, as these are often more strategic.
+    const preferredCols = [3, 2, 4, 1, 5, 0, 6]; 
+    let bestFavorableCol: number | null = null;
+
+    for (const col of preferredCols) {
+      if (currentBoard[0][col]) continue; // Column is full
+
+      const boardAfterAIMove = simulateMoveLocal(currentBoard, col, player);
+      if (!boardAfterAIMove) continue;
+
+      // Priority 1: If this move is an immediate win for the AI (player), take it.
+      if (checkWinner(boardAfterAIMove)?.player === player) {
+        return col;
+      }
+
+      // Priority 2: Check if this move allows the opponent to win on their next turn.
+      // If so, this is generally a bad move, so skip it unless no other options exist.
+      let opponentCanWinNext = false;
+      for (let opponentNextCol = 0; opponentNextCol < COLS; opponentNextCol++) {
+        if (boardAfterAIMove[0][opponentNextCol]) continue; // Opponent's column is full
+
+        const boardAfterOpponentMove = simulateMoveLocal(boardAfterAIMove, opponentNextCol, opponent);
+        if (boardAfterOpponentMove && checkWinner(boardAfterOpponentMove)?.player === opponent) {
+          opponentCanWinNext = true;
+          break;
+        }
+      }
+      if (opponentCanWinNext) {
+        continue; // Avoid moves that directly lead to an opponent's win.
+      }
+
+      // Priority 3: Check if the AI's current move (which resulted in boardAfterAIMove)
+      // sets up an immediate win for the AI on its *next* turn.
+      // `checkThreeAndOpenLocal` is called on `boardAfterAIMove` for the AI player.
+      // If it returns a column, it means AI can play in that column on `boardAfterAIMove` and win.
+      const setupInfo = checkThreeAndOpenLocal(boardAfterAIMove, player);
+      if (setupInfo) {
+        // The move in `col` creates `boardAfterAIMove`. On this board, AI can play in `setupInfo.col` and win.
+        // So, the current `col` is a good setup move.
+        return col; 
+      }
+      
+      // Fallback: If no critical wins or blocks are found, store this column as a potential favorable move.
+      // The first one found (respecting center preference) is kept as a non-critical but potentially good move.
+      if (bestFavorableCol === null) {
+        bestFavorableCol = col;
+      }
+    }
+    return bestFavorableCol; // Return the best favorable column found, or null.
+  }, [checkWinner]); // checkWinner is a stable function defined outside, but good to list if it were not.
+
+  /**
+   * Determines the AI's move for the "hard" difficulty level.
+   * Strategy order:
+   * 1. Win if possible.
+   * 2. Block opponent's win if they can win next turn.
+   * 3. Make a "favorable" move (e.g., set up a win for the next turn) using `isFavorableMove`.
+   * 4. If no strategic move is found, make a random move.
+   * @param board The current game board.
+   * @param scope (Unused in this implementation for hard, but part of the signature).
+   * @returns The column number for the AI's move.
+   */
+  const getHardMove = useCallback((board: Board, scope: number): number | null => {
+    const aiPlayer = "Yellow";
+    const humanPlayer = "Red";
+
+    // Priority 1: Check if AI can win in the next move.
+    for (let col = 0; col < COLS; col++) {
+      const tempBoard = makeMove(board, col, aiPlayer);
+      if (tempBoard && checkWinner(tempBoard)?.player === aiPlayer) {
+        return col;
+      }
     }
 
-    return getRandomMove(board, scope);
-  }, [getRandomMove]);
+    // Priority 2: Check if human player can win in the next move and block it.
+    for (let col = 0; col < COLS; col++) {
+      const tempBoard = makeMove(board, col, humanPlayer);
+      if (tempBoard && checkWinner(tempBoard)?.player === humanPlayer) {
+        return col;
+      }
+    }
 
-  const isFavorableMove = useCallback((board: Board, player: Player, scope: number): boolean => {
-    return false;
-  }, []);
+    // Priority 3: Try to find a strategically favorable move.
+    const favorableCol = isFavorableMove(board, aiPlayer, humanPlayer);
+    if (favorableCol !== null) {
+      return favorableCol;
+    }
+
+    // Priority 4: Fallback to a random move if no better strategic option is found.
+    return getRandomMove(board, scope);
+  }, [makeMove, checkWinner, getRandomMove, isFavorableMove]);
 
   const makeMove = useCallback((board: Board, col: number, player: Player): Board | null => {
     let rowToDrop = -1;
